@@ -20,7 +20,7 @@ type Config struct {
 	TimeOut  int   `default:"5"`
 }
 
-func NewPostgresDB(config Config) (*pgxpool.Pool, error) {
+func NewPostgresDB(config Config) (*pgxpool.Pool, string, error) {
 	ctx, _ := context.WithCancel(context.Background())
 	connStr := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=%s&connect_timeout=%d",
 		"postgres",
@@ -38,7 +38,7 @@ func NewPostgresDB(config Config) (*pgxpool.Pool, error) {
 	pool, err := pgxpool.ConnectConfig(ctx, poolConfig)
 	if err != nil {
 		log.Panic(err)
-		return nil, err
+		return nil, connStr, nil
 	}
 
 	for i := 0; i < int(config.MaxConns); i++ {
@@ -52,7 +52,7 @@ func NewPostgresDB(config Config) (*pgxpool.Pool, error) {
 		//	pool.Stat().MaxConns(), pool.Stat().IdleConns(),
 		//	pool.Stat().TotalConns())
 	}
-	return pool, nil
+	return pool, connStr, nil
 	//select {}
 }
 func Apply(conn *pgxpool.Pool) error {

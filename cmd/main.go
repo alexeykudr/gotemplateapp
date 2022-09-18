@@ -3,7 +3,10 @@ package main
 import (
 	"backend/internal/service"
 	"backend/pkg/repository"
+	"database/sql"
 	"fmt"
+	_ "github.com/lib/pq"
+	"github.com/pressly/goose"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -28,7 +31,7 @@ func main() {
 	log.SetFormatter(&log.JSONFormatter{})
 	fmt.Println(viper.GetString("TOKEN"))
 
-	pool, err := repository.NewPostgresDB(repository.Config{
+	pool, ConnString, err := repository.NewPostgresDB(repository.Config{
 		User:     viper.GetString("DB_USER"),
 		Password: viper.GetString("DB_PASSWORD"),
 		Host:     viper.GetString("DB_HOST"),
@@ -48,5 +51,20 @@ func main() {
 
 	ins := service.NewInstance(pool)
 	ins.Start()
+	fmt.Println(ConnString)
+
+	mdb, err := sql.Open("postgres", ConnString)
+	if err != nil {
+		fmt.Println(err)
+	}
+	err = mdb.Ping()
+	if err != nil {
+		panic(err)
+	}
+	err = goose.Up(mdb, "internal/migrations")
+	//err = goose.Down(mdb, "internal/migrations")
+	if err != nil {
+		panic(err)
+	}
 
 }

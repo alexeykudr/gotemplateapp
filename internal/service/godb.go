@@ -43,21 +43,15 @@ func (i *Instance) Start() {
 	//}
 	//
 
-	StuffUsers, err := i.getStuffUsers(context.Background(), true)
-	if err != nil {
-		return
-	}
-	//fmt.Println(StuffUsers)
-
-	for index, o := range StuffUsers {
-		fmt.Println(index, o)
-		lastname := RandStringRunes(7)
-		err := i.updateUserName(context.Background(), o.Name+" "+lastname, o.Email)
-		if err != nil {
-			return
-		}
-
-	}
+	//for index, o := range StuffUsers {
+	//	fmt.Println(index, o)
+	//	lastname := RandStringRunes(7)
+	//	err := i.updateUserName(context.Background(), o.Name+" "+lastname, o.Email)
+	//	if err != nil {
+	//		return
+	//	}
+	//
+	//}
 
 }
 func (i *Instance) mockUserData() error {
