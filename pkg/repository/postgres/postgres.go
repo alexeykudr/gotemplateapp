@@ -1,4 +1,4 @@
-package repository
+package postgres
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"net/url"
 )
 
-type Config struct {
+type PostgresConfig struct {
 	User     string
 	Password string
 	Host     string
@@ -20,7 +20,7 @@ type Config struct {
 	TimeOut  int   `default:"5"`
 }
 
-func NewPostgresDB(config Config) (*pgxpool.Pool, string, error) {
+func NewPostgresDB(config PostgresConfig) (*pgxpool.Pool, string, error) {
 	ctx, _ := context.WithCancel(context.Background())
 	connStr := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=%s&connect_timeout=%d",
 		"postgres",
@@ -55,7 +55,7 @@ func NewPostgresDB(config Config) (*pgxpool.Pool, string, error) {
 	return pool, connStr, nil
 	//select {}
 }
-func Apply(conn *pgxpool.Pool) error {
+func HealthCheck(conn *pgxpool.Pool) error {
 	_, err := conn.Exec(context.Background(), ";")
 	if err != nil {
 		return err

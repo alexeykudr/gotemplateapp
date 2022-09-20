@@ -1,12 +1,11 @@
 package main
 
 import (
-	"backend/internal/service"
-	"backend/pkg/repository"
+	"backend/pkg/repository/mongo"
+	"backend/pkg/repository/postgres"
 	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
-	"github.com/pressly/goose"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -29,9 +28,8 @@ func main() {
 		panic("Error with config!")
 	}
 	log.SetFormatter(&log.JSONFormatter{})
-	fmt.Println(viper.GetString("TOKEN"))
 
-	pool, ConnString, err := repository.NewPostgresDB(repository.Config{
+	pool, ConnString, err := postgres.NewPostgresDB(postgres.PostgresConfig{
 		User:     viper.GetString("DB_USER"),
 		Password: viper.GetString("DB_PASSWORD"),
 		Host:     viper.GetString("DB_HOST"),
@@ -44,14 +42,13 @@ func main() {
 	},
 	)
 
-	err = repository.Apply(pool)
+	err = postgres.HealthCheck(pool)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	ins := service.NewInstance(pool)
+	ins := postgres.NewInstance(pool)
 	ins.Start()
-	fmt.Println(ConnString)
 
 	mdb, err := sql.Open("postgres", ConnString)
 	if err != nil {
@@ -61,10 +58,22 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	err = goose.Up(mdb, "internal/migrations")
+	//err = goose.Up(mdb, "internal/migrations")
 	//err = goose.Down(mdb, "internal/migrations")
-	if err != nil {
-		panic(err)
-	}
+	//if err != nil {
+	//	panic(err)
+	//}
+	//
+	mongoClient, err := mongo.NewMongoDbClient(mongo.MongoConfig{
+		User:     viper.GetString("MONGO_USER"),
+		Password: viper.GetString("MONGO_PASSWORD"),
+		Host:     viper.GetString("MONGO_HOST"),
+		Port:     viper.GetInt("MONGO_PORT"),
+	})
+
+	err = mongo.HealthCheck(mongoClient)
+
+	mongoInstance := mongo.NewInstance(mongoClient)
+	mongoInstance.Start()
 
 }

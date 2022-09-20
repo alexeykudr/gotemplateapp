@@ -1,4 +1,4 @@
-package service
+package postgres
 
 import (
 	"backend"
@@ -29,7 +29,7 @@ func RandStringRunes(n int) string {
 }
 
 func (i *Instance) Start() {
-
+	//
 	//u, _ := i.getAllUsers(context.Background())
 	//fmt.Println(u)
 
@@ -77,7 +77,7 @@ func (i *Instance) mockUserData() error {
 func (i *Instance) getAllUsers(ctx context.Context) ([]backend.User, error) {
 	var users []backend.User
 
-	rows, err := i.Db.Query(ctx, "SELECT username, email, stuff FROM users;")
+	rows, err := i.Db.Query(ctx, "SELECT name, age, username, email, stuff FROM users;")
 	if err == pgx.ErrNoRows {
 		fmt.Println("No rows")
 		return nil, err
@@ -88,7 +88,10 @@ func (i *Instance) getAllUsers(ctx context.Context) ([]backend.User, error) {
 	defer rows.Close()
 	for rows.Next() {
 		user := backend.User{}
-		rows.Scan(&user.Username, &user.Email, &user.IsStuff)
+		err := rows.Scan(&user.Name, &user.Age, &user.Username, &user.Email, &user.IsStuff)
+		if err != nil {
+			return nil, err
+		}
 		users = append(users, user)
 	}
 	return users, nil
@@ -118,7 +121,10 @@ func (i *Instance) getStuffUsers(ctx context.Context, perms bool) ([]backend.Use
 
 	for rows.Next() {
 		var user backend.User
-		rows.Scan(&user.Name, &user.Age, &user.Username, &user.Email, &user.IsStuff)
+		err := rows.Scan(&user.Name, &user.Age, &user.Username, &user.Email, &user.IsStuff)
+		if err != nil {
+			return nil, err
+		}
 		users = append(users, user)
 	}
 
