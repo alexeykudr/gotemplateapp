@@ -14,7 +14,7 @@ type Instance struct {
 	Db *pgxpool.Pool
 }
 
-func NewInstance(db *pgxpool.Pool) *Instance {
+func NewAuthPostgres(db *pgxpool.Pool) *Instance {
 	return &Instance{Db: db}
 }
 
@@ -67,14 +67,21 @@ func (i *Instance) mockUserData() error {
 			stuff = false
 		}
 
-		err := i.addUser(context.Background(), name, rand.Intn(40), username, email, stuff)
+		_, err := i.AddUser(context.Background(), backend.User{
+			Name:     name,
+			Age:      rand.Intn(40),
+			Username: username,
+			Email:    email,
+			IsStuff:  stuff,
+		})
 		if err != nil {
 			return err
 		}
 	}
 	return nil
 }
-func (i *Instance) getAllUsers(ctx context.Context) ([]backend.User, error) {
+
+func (i *Instance) GetAllUsers(ctx context.Context) ([]backend.User, error) {
 	var users []backend.User
 
 	rows, err := i.Db.Query(ctx, "SELECT name, age, username, email, stuff FROM users;")
@@ -96,7 +103,7 @@ func (i *Instance) getAllUsers(ctx context.Context) ([]backend.User, error) {
 	}
 	return users, nil
 }
-func (i *Instance) getUserByEmail(ctx context.Context, email string) (backend.User, error) {
+func (i *Instance) GetUserByEmail(ctx context.Context, email string) (backend.User, error) {
 	var user backend.User
 	err := i.Db.QueryRow(ctx, "SELECT name, age, username, email, stuff FROM users WHERE email=$1;", email).Scan(&user.Name, &user.Age, &user.Username, &user.Email, &user.IsStuff)
 	if err != nil {
@@ -106,7 +113,7 @@ func (i *Instance) getUserByEmail(ctx context.Context, email string) (backend.Us
 	return user, nil
 }
 
-func (i *Instance) getStuffUsers(ctx context.Context, perms bool) ([]backend.User, error) {
+func (i *Instance) GetStuffUsers(ctx context.Context, perms bool) ([]backend.User, error) {
 	var users []backend.User
 
 	rows, err := i.Db.Query(ctx, "SELECT name, age, username, email, stuff FROM users WHERE stuff=$1", perms)
@@ -131,17 +138,17 @@ func (i *Instance) getStuffUsers(ctx context.Context, perms bool) ([]backend.Use
 	return users, nil
 }
 
-func (i *Instance) addUser(ctx context.Context, name string, age int, username string, email string, isStuff bool) error {
-	_, err := i.Db.Exec(ctx, "INSERT INTO users (created_at, name, age, username, email, stuff) VALUES ($1, $2, $3, $4, $5, $6)",
-		time.Now(), name, age, username, email, isStuff)
+func (i *Instance) AddUser(ctx context.Context, user backend.User) (int, error) {
+	var id int
+	err := i.Db.QueryRow(ctx, "INSERT INTO users (created_at, name, age, username, email, stuff) VALUES ($1, $2, $3, $4, $5, $6) RETURNING ID",
+		time.Now(), user.Name, user.Age, user.Username, user.Email, user.IsStuff).Scan(&id)
 	if err != nil {
-		fmt.Println(err)
-		return err
+		return 0, err
 	}
-	return nil
+	return id, nil
 }
 
-func (i *Instance) updateUserStatus(ctx context.Context, email string, status bool) error {
+func (i *Instance) UpdateUserStatus(ctx context.Context, email string, status bool) error {
 	_, err := i.Db.Exec(ctx, "UPDATE users SET stuff=$1 WHERE email=$2;", status, email)
 	if err == pgx.ErrNoRows {
 		fmt.Println("no such email")
@@ -152,18 +159,32 @@ func (i *Instance) updateUserStatus(ctx context.Context, email string, status bo
 	return nil
 }
 
-func (i *Instance) updateUserName(ctx context.Context, name string, email string) error {
-	_, err := i.Db.Exec(ctx, "UPDATE users SET name=$1 where email=$2", name, email)
+func (i *Instance) DeleteUserByEmail(ctx context.Context, email string) error {
+	tag, err := i.Db.Exec(ctx, "DELETE FROM users WHERE email=$1;", email)
+	if tag.RowsAffected() == 0 {
+		fmt.Println("no such email")
+	}
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 	return nil
 }
+func (i *Instance) GetUserById(ctx context.Context, id int) (backend.User, error) {
 
-func (i *Instance) deleteUserByEmail(ctx context.Context, email string) error {
-	tag, err := i.Db.Exec(ctx, "DELETE FROM users WHERE email=$1;", email)
+	var user backend.User
+	err := i.Db.QueryRow(ctx, "SELECT name, age, username, email, stuff FROM users WHERE id=$1;", id).Scan(&user.Name, &user.Age, &user.Username, &user.Email, &user.IsStuff)
+	if err != nil {
+		fmt.Println(err)
+		return user, err
+	}
+	return user, nil
+}
+
+func (i *Instance) DeleteUserById(ctx context.Context, id int) error {
+	tag, err := i.Db.Exec(ctx, "DELETE FROM users WHERE id=$1", id)
 	if tag.RowsAffected() == 0 {
-		fmt.Println("no such email")
+		fmt.Println("no such user")
 	}
 	if err != nil {
 		fmt.Println(err)

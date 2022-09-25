@@ -1,16 +1,20 @@
 package main
 
 import (
-	"backend/pkg/repository/mongo"
+	"backend"
+	"backend/pkg/handler"
 	"backend/pkg/repository/postgres"
-	"database/sql"
+	"backend/pkg/service"
+	"encoding/json"
 	"fmt"
 	_ "github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"net/http"
 )
 
 func NewConfig() error {
+	log.SetFormatter(&log.JSONFormatter{})
 	viper.SetConfigFile(".env")
 	viper.AutomaticEnv()
 	err := viper.ReadInConfig()
@@ -21,15 +25,46 @@ func NewConfig() error {
 	return nil
 }
 
+func BasicAuthHandler(w http.ResponseWriter, r *http.Request) {
+	a := "qwe"
+	b := "123"
+	username, password, ok := r.BasicAuth()
+	if ok {
+		if username == a && password == b {
+			fmt.Fprint(w, "ok!")
+		} else {
+			w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		}
+	}
+}
+func ReturnIdsHandler(w http.ResponseWriter, r *http.Request) {
+	_, ok := r.URL.Query()["id[]"]
+	if !ok {
+		fmt.Fprint(w, "empty id")
+	} else {
+		user := backend.User{
+			Name:     "user3",
+			Age:      11,
+			Username: "user3",
+			Email:    "user3@gmail.com",
+			IsStuff:  false,
+		}
+		jsondata, _ := json.Marshal(user)
+		_, _ = w.Write(jsondata)
+
+	}
+
+}
+
 func main() {
 	err := NewConfig()
 	if err != nil {
 		log.Panic(err)
 		panic("Error with config!")
 	}
-	log.SetFormatter(&log.JSONFormatter{})
 
-	pool, ConnString, err := postgres.NewPostgresDB(postgres.PostgresConfig{
+	pool, _, err := postgres.NewPostgresDB(postgres.PostgresConfig{
 		User:     viper.GetString("DB_USER"),
 		Password: viper.GetString("DB_PASSWORD"),
 		Host:     viper.GetString("DB_HOST"),
@@ -42,38 +77,22 @@ func main() {
 	},
 	)
 
-	err = postgres.HealthCheck(pool)
-	if err != nil {
-		fmt.Println(err)
-	}
+	repo := postgres.NewRepository(pool)
+	services := service.NewService(repo)
+	handler := handler.NewHandler(services)
 
-	ins := postgres.NewInstance(pool)
-	ins.Start()
+	//mongoClient, err := mongo.NewMongoDbClient(mongo.Config{
+	//	User:     viper.GetString("MONGO_USER"),
+	//	Password: viper.GetString("MONGO_PASSWORD"),
+	//	Host:     viper.GetString("MONGO_HOST"),
+	//	Port:     viper.GetInt("MONGO_PORT"),
+	//})
+	//fmt.Println(mongoClient)
 
-	mdb, err := sql.Open("postgres", ConnString)
-	if err != nil {
-		fmt.Println(err)
-	}
-	err = mdb.Ping()
-	if err != nil {
-		panic(err)
-	}
-	//err = goose.Up(mdb, "internal/migrations")
-	//err = goose.Down(mdb, "internal/migrations")
-	//if err != nil {
-	//	panic(err)
-	//}
-	//
-	mongoClient, err := mongo.NewMongoDbClient(mongo.MongoConfig{
-		User:     viper.GetString("MONGO_USER"),
-		Password: viper.GetString("MONGO_PASSWORD"),
-		Host:     viper.GetString("MONGO_HOST"),
-		Port:     viper.GetInt("MONGO_PORT"),
-	})
+	//m := mongo.NewAirbnbMongoInstance(mongoClient)
+	//m.FindByType("10038496")
 
-	err = mongo.HealthCheck(mongoClient)
-
-	mongoInstance := mongo.NewInstance(mongoClient)
-	mongoInstance.Start()
-
+	//http.HandleFunc("/", BasicAuthHandler)
+	//http.HandleFunc("/orders", ReturnIdsHandler)
+	http.ListenAndServe(":8080", handler.InitRoutes())
 }

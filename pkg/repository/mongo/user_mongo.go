@@ -97,3 +97,5 @@ func (i *Instance) FindByName(n string) error {
 }
 
 //TODO https://www.mongodb.com/docs/drivers/go/current/fundamentals/crud/read-operations/query-document/
+//TODO Переделать на эирбнб , реализовать круд , пару агреграции, поиск
+//GET BY ID, GET BY MIN NIGHTS TO MAX NIGHTS , GET BY accommodates (вмещает) , GET BY PRICE

@@ -8,18 +8,18 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type MongoConfig struct {
+type Config struct {
 	User     string
 	Password string
 	Host     string
 	Port     int
 }
 
-func NewMongoConfig(user string, password string, port int) *MongoConfig {
-	return &MongoConfig{User: user, Password: password, Port: port}
+func NewMongoConfig(user string, password string, port int) *Config {
+	return &Config{User: user, Password: password, Port: port}
 }
 
-func NewMongoDbClient(config MongoConfig) (*mongo.Client, error) {
+func NewMongoDbClient(config Config) (*mongo.Client, error) {
 	connect := fmt.Sprintf("mongodb://%s:%s@%s:%d/", config.User, config.Password, config.Host, config.Port)
 	//mongodb://root:example@localhost:27017/
 	client, _ := mongo.NewClient(options.Client().ApplyURI(connect))
