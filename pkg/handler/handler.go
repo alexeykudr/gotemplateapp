@@ -11,23 +11,32 @@ import (
 	"github.com/google/uuid"
 	_ "github.com/swaggo/http-swagger/example/go-chi/docs"
 	"net/http"
+	"strings"
 )
 
 type Handler struct {
 	service *service.Service
 }
 
+type signInInput struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
 func NewHandler(service *service.Service) *Handler {
 	return &Handler{service: service}
 }
 
-func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 	var user backend.User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 	id, err := h.service.CreateUser(context.Background(), user)
+
+	//return token
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -40,16 +49,17 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonResp)
 }
 
+func (h *Handler) SecretInfoHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "secret info")
+}
+
 func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
-	type signInInput struct {
-		Username string `json:"username" binding:"required"`
-		Password string `json:"password" binding:"required"`
-	}
 	var input signInInput
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
 		return
 	}
+
 	token, err := h.service.GenerateToken(input.Username, input.Password)
 	if err != nil {
 		return
@@ -69,7 +79,7 @@ func (h *Handler) Healthcheck(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) RequestIdMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id, _ := uuid.NewUUID()
-		next.ServeHTTP(w, r.WithContext(context.WithValue(context.Background(), "request_id", id)))
+		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), "request_id", id)))
 	})
 }
 func BasicAuthMiddleware(next http.Handler) http.Handler {
@@ -88,13 +98,26 @@ func BasicAuthMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func (h *Handler) JWTMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+
+		token := strings.Split(request.Header["Authorization"][0], " ")
+		fmt.Println(token[1])
+		id, err := h.service.ParseToken(token[1])
+		fmt.Println(id)
+		fmt.Println(err)
+	})
+}
+
 func (h *Handler) InitRoutes() *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Logger)
+	r.Use(h.RequestIdMiddleware)
 
-	r.Post("/user", h.createUser)
+	r.Post("/user", h.signUp)
 	r.Get("/sign-in", h.signIn)
+	r.With(h.JWTMiddleware).Get("/", h.Healthcheck)
 	//r.With(BasicAuthMiddleware).Get("/user", h.getUsersList)
 	//r.Get("/user/{id:[0-9]+}", h.getUserById)
 	//r.Delete("/user/{id:[0-9]+}", h.deleteUser)
