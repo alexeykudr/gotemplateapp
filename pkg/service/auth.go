@@ -3,49 +3,71 @@ package service
 import (
 	"backend"
 	"backend/pkg/repository/postgres"
+	"backend/pkg/utils"
 	"context"
+	"errors"
+	"github.com/dgrijalva/jwt-go"
+	"time"
 )
 
 type AuthService struct {
 	repo *postgres.Repository
 }
 
+const tokenTTL = 12 * time.Hour
+const signingKey = "kjqwhekzhjk123123bjz"
+
+type tokenClaims struct {
+	jwt.StandardClaims
+	UserId int `json:"user_id"`
+}
+
 func NewAuthService(repo *postgres.Repository) *AuthService {
 	return &AuthService{repo: repo}
 }
 
-func (s *AuthService) CreateUser(ctx context.Context, user backend.User) error {
-	_, err := s.repo.AddUser(ctx, user)
+func (s *AuthService) CreateUser(ctx context.Context, user backend.User) (int, error) {
+	user.Password = utils.GeneratePasswordHash(user.Password)
+	id, err := s.repo.AddUser(ctx, user)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return nil
-}
-
-func (s *AuthService) GetUserList(ctx context.Context) ([]backend.User, error) {
-	users, err := s.repo.GetAllUsers(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return users, nil
-}
-
-func (s *AuthService) GetUserById(ctx context.Context, id int) (backend.User, error) {
-	user, err := s.repo.GetUserById(ctx, id)
-
-	if err != nil {
-		return user, nil
-	}
-	return user, nil
-}
-func (s *AuthService) DeleteUserById(ctx context.Context, id int) error {
-	err := s.repo.DeleteUserById(ctx, id)
-	if err != nil {
-		return err
-	}
-	return nil
+	return id, nil
 }
 
 func (s *AuthService) GenerateToken(username, password string) (string, error) {
-	return "abc", nil
+	user, err := s.repo.GetUser(context.Background(), username, utils.GeneratePasswordHash(password))
+	if err != nil {
+		return "", err
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &tokenClaims{
+		jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(tokenTTL).Unix(),
+			IssuedAt:  time.Now().Unix(),
+		},
+		user.Id,
+	})
+
+	return token.SignedString([]byte(signingKey))
+}
+
+func (s *AuthService) ParseToken(accessToken string) (int, error) {
+	token, err := jwt.ParseWithClaims(accessToken, &tokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("invalid signing method")
+		}
+
+		return []byte(signingKey), nil
+	})
+	if err != nil {
+		return 0, err
+	}
+
+	claims, ok := token.Claims.(*tokenClaims)
+	if !ok {
+		return 0, errors.New("token claims are not of type *tokenClaims")
+	}
+
+	return claims.UserId, nil
 }

@@ -1,11 +1,9 @@
 package main
 
 import (
-	"backend"
 	"backend/pkg/handler"
 	"backend/pkg/repository/postgres"
 	"backend/pkg/service"
-	"encoding/json"
 	"fmt"
 	_ "github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
@@ -14,14 +12,12 @@ import (
 )
 
 func NewConfig() error {
-	log.SetFormatter(&log.JSONFormatter{})
 	viper.SetConfigFile(".env")
 	viper.AutomaticEnv()
 	err := viper.ReadInConfig()
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -38,26 +34,10 @@ func BasicAuthHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
-func ReturnIdsHandler(w http.ResponseWriter, r *http.Request) {
-	_, ok := r.URL.Query()["id[]"]
-	if !ok {
-		fmt.Fprint(w, "empty id")
-	} else {
-		user := backend.User{
-			Name:     "user3",
-			Age:      11,
-			Username: "user3",
-			Email:    "user3@gmail.com",
-			IsStuff:  false,
-		}
-		jsondata, _ := json.Marshal(user)
-		_, _ = w.Write(jsondata)
-
-	}
-
-}
 
 func main() {
+	log.SetFormatter(&log.JSONFormatter{})
+
 	err := NewConfig()
 	if err != nil {
 		log.Panic(err)

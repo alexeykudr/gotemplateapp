@@ -7,20 +7,23 @@ import (
 )
 
 type Authorization interface {
-	GetAllUsers(ctx context.Context) ([]backend.User, error)
-	GetUserByEmail(ctx context.Context, email string) (backend.User, error)
-	GetStuffUsers(ctx context.Context, perms bool) ([]backend.User, error)
+	GetUser(ctx context.Context, username, password string) (backend.User, error)
 	AddUser(ctx context.Context, user backend.User) (int, error)
-	UpdateUserStatus(ctx context.Context, email string, status bool) error
-	DeleteUserByEmail(ctx context.Context, email string) error
-	GetUserById(ctx context.Context, id int) (backend.User, error)
-	DeleteUserById(ctx context.Context, id int) error
+	UpdateUserPassword(ctx context.Context, email string) (string, error)
+}
+
+type Stuff interface {
+	GetAllUsers(ctx context.Context) ([]backend.User, error)
 }
 
 type Repository struct {
 	Authorization
+	Stuff
 }
 
 func NewRepository(Db *pgxpool.Pool) *Repository {
-	return &Repository{Authorization: NewAuthPostgres(Db)}
+	return &Repository{
+		Authorization: NewAuthPostgres(Db),
+		Stuff:         NewStuffPostgres(Db),
+	}
 }

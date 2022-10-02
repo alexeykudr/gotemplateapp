@@ -15,9 +15,9 @@ type PostgresConfig struct {
 	Port     string
 	DBName   string
 	SSLMode  string
-	MinConns int32 `default:"20"`
-	MaxConns int32 `default:"20"`
-	TimeOut  int   `default:"5"`
+	MinConns int32 `default:"10"`
+	MaxConns int32 `default:"50"`
+	TimeOut  int   `default:"15"`
 }
 
 func NewPostgresDB(config PostgresConfig) (*pgxpool.Pool, string, error) {
