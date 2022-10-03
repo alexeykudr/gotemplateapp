@@ -6,6 +6,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
+//go:generate mockgen -source=repository.go -destination=mocks/mock.go
 type Authorization interface {
 	GetUser(ctx context.Context, username, password string) (backend.User, error)
 	AddUser(ctx context.Context, user backend.User) (int, error)
