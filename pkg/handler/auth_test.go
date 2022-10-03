@@ -1,10 +1,12 @@
-package service
+package handler
 
 import (
 	"backend"
+	service "backend/pkg/service"
 	mock_service "backend/pkg/service/mocks"
 	"bytes"
 	"context"
+	"errors"
 	"github.com/go-chi/chi/v5"
 	"github.com/golang/mock/gomock"
 	"github.com/magiconair/properties/assert"
@@ -48,7 +50,19 @@ func TestHandler_signUp(t *testing.T) {
 				r.EXPECT().CreateUser(context.Background(), user).Return(2, nil).AnyTimes()
 			},
 			expectedStatusCode:   201,
-			expectedResponseBody: `{"id":3}`,
+			expectedResponseBody: `{"id":2}`,
+		},
+		{name: "not ok",
+			inputBody: `{"username": "q", "password": "qwerty"}`,
+			inputUser: backend.User{
+				Username: "q",
+				Password: "qwerty",
+			},
+			mockBehavior: func(r *mock_service.MockAuthorization, user backend.User) {
+				r.EXPECT().CreateUser(context.Background(), user).Return(0, errors.New(`{"message":"Something went wrong"}`)).AnyTimes()
+			},
+			expectedStatusCode:   400,
+			expectedResponseBody: `{"Username":"the length must be between 5 and 50"}`,
 		},
 	}
 
@@ -60,7 +74,7 @@ func TestHandler_signUp(t *testing.T) {
 			repo := mock_service.NewMockAuthorization(ctl)
 			test.mockBehavior(repo, test.inputUser)
 
-			service := &Service{Authorization: repo}
+			service := &service.Service{Authorization: repo}
 			h := Handler{service}
 
 			r := chi.NewRouter()

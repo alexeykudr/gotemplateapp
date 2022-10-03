@@ -33,7 +33,7 @@ func (i *StuffPostgres) GetAllUsers(ctx context.Context) ([]backend.User, error)
 
 	for rows.Next() {
 		user := backend.User{}
-		err := rows.Scan(&user.Id, &user.Username, &user.Password, &user.Email, &user.IsStuff)
+		err := rows.Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.IsStuff)
 		if err != nil {
 			log.Error("Error with scan in GetAllUsers" + err.Error())
 			return nil, err

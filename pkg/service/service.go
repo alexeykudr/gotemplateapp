@@ -7,7 +7,7 @@ import (
 	"context"
 )
 
-//buisnes logic here
+//go:generate mockgen -source=service.go -destination=mocks/mock.go
 type Authorization interface {
 	CreateUser(ctx context.Context, user backend.User) (int, error)
 	GenerateToken(username, password string) (string, error)

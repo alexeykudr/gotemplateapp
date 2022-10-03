@@ -48,6 +48,9 @@ func (i *CRUDInstance) FindByType(typename string) error {
 			}},
 	}
 	cursor, err := i.db.Find(context.TODO(), filter)
+	if err != nil {
+		return err
+	}
 
 	var results []bson.D
 

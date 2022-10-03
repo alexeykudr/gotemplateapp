@@ -21,7 +21,7 @@ type PostgresConfig struct {
 }
 
 func NewPostgresDB(config PostgresConfig) (*pgxpool.Pool, string, error) {
-	ctx, _ := context.WithCancel(context.Background())
+	ctx := context.Background()
 	connStr := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=%s&connect_timeout=%d",
 		"postgres",
 		url.QueryEscape(config.User),

@@ -56,6 +56,9 @@ func main() {
 		TimeOut:  5,
 	},
 	)
+	if err != nil {
+		panic("Error with creating postgres db")
+	}
 
 	repo := postgres.NewRepository(pool)
 	services := service.NewService(repo)
@@ -74,5 +77,8 @@ func main() {
 
 	//http.HandleFunc("/", BasicAuthHandler)
 	//http.HandleFunc("/orders", ReturnIdsHandler)
-	http.ListenAndServe(":8080", handler.InitRoutes())
+	err = http.ListenAndServe(":8080", handler.InitRoutes())
+	if err != nil {
+		panic("Cant serve at this port")
+	}
 }

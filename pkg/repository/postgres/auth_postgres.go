@@ -23,7 +23,7 @@ func (i *Instance) GetUser(ctx context.Context, username, password string) (back
 
 	row := i.Db.QueryRow(ctx, "SELECT id, username, email, stuff FROM users WHERE username=$1 AND password_hash=$2;",
 		username, password)
-	err := row.Scan(&user.Id, &user.Username, &user.Email, &user.IsStuff)
+	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.IsStuff)
 
 	if err != nil {
 		log.Error("Error with scan in GetUser " + err.Error())
