@@ -21,9 +21,8 @@ func (u User) Validate() error {
 		// City cannot be empty, and the length must between 5 and 50
 		validation.Field(&u.Password, validation.Required, validation.Length(5, 50)),
 		// State cannot be empty, and must be a string consisting of two letters in upper case
-		validation.Field(&u.Password, validation.Required, validation.Length(5, 50)),
 		// State cannot be empty, and must be a string consisting of five digits
-		validation.Field(&u.Email, validation.Length(5, 50)),
+		validation.Field(&u.Email, validation.Required, validation.Length(5, 50)),
 	)
 }
 

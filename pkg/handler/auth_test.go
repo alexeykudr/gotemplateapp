@@ -52,7 +52,7 @@ func TestHandler_signUp(t *testing.T) {
 			expectedStatusCode:   201,
 			expectedResponseBody: `{"id":2}`,
 		},
-		{name: "not ok",
+		{name: "shor username",
 			inputBody: `{"username": "q", "password": "qwerty"}`,
 			inputUser: backend.User{
 				Username: "q",
@@ -63,6 +63,18 @@ func TestHandler_signUp(t *testing.T) {
 			},
 			expectedStatusCode:   400,
 			expectedResponseBody: `{"Username":"the length must be between 5 and 50"}`,
+		},
+		{name: "without email",
+			inputBody: `{"username":"user123", "password":"abc123456789"}`,
+			inputUser: backend.User{
+				Username: "user123",
+				Password: "abc123456789",
+			},
+			mockBehavior: func(r *mock_service.MockAuthorization, user backend.User) {
+				r.EXPECT().CreateUser(context.Background(), user).Return(0, errors.New(`{"message":"Something went wrong"}`)).AnyTimes()
+			},
+			expectedStatusCode:   400,
+			expectedResponseBody: `{"email":"cannot be blank"}`,
 		},
 	}
 

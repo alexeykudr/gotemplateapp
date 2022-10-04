@@ -16,11 +16,8 @@ type signInInput struct {
 
 func (s *signInInput) Validate() error {
 	return validation.ValidateStruct(&s,
-		// Street cannot be empty, and the length must between 5 and 50
 		validation.Field(&s.Username, validation.Required, validation.Length(5, 50)),
-		// City cannot be empty, and the length must between 5 and 50
 		validation.Field(&s.Password, validation.Required, validation.Length(5, 50)),
-		// State cannot be empty, and must be a string consisting of two letters in upper case
 	)
 }
 
@@ -57,6 +54,10 @@ func (h *Handler) SecretInfoHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "secret info")
 }
 
+func (h *Handler) Healthcheck(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "ok")
+}
+
 func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 	var input signInInput
 	err := json.NewDecoder(r.Body).Decode(&input)
@@ -76,8 +77,4 @@ func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(jsonResp)
-}
-
-func (h *Handler) Healthcheck(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "ok")
 }

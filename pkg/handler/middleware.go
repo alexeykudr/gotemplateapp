@@ -40,5 +40,7 @@ func (h *Handler) JWTMiddleware(next http.Handler) http.Handler {
 		id, err := h.Service.ParseToken(token[1])
 		fmt.Println(id)
 		fmt.Println(err)
+
+		//TODO if user exist put them to request context
 	})
 }
