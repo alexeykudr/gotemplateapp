@@ -1,9 +1,9 @@
 package service
 
 import (
-	"backend"
 	"backend/pkg/repository/postgres"
 	"backend/pkg/utils"
+	"backend/structs"
 	"context"
 	"errors"
 	"github.com/dgrijalva/jwt-go"
@@ -26,7 +26,7 @@ func NewAuthService(repo *postgres.Repository) *AuthService {
 	return &AuthService{repo: repo}
 }
 
-func (s *AuthService) CreateUser(ctx context.Context, user backend.User) (int, error) {
+func (s *AuthService) CreateUser(ctx context.Context, user structs.User) (int, error) {
 	user.Password = utils.GeneratePasswordHash(user.Password)
 	id, err := s.repo.AddUser(ctx, user)
 	if err != nil {
@@ -68,6 +68,5 @@ func (s *AuthService) ParseToken(accessToken string) (int, error) {
 	if !ok {
 		return 0, errors.New("token claims are not of type *tokenClaims")
 	}
-
 	return claims.UserId, nil
 }

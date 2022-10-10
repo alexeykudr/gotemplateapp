@@ -5,7 +5,7 @@
 package mock_service
 
 import (
-	backend "backend"
+	backend "backend/structs"
 	context "context"
 	reflect "reflect"
 

@@ -41,6 +41,9 @@ func (h *Handler) JWTMiddleware(next http.Handler) http.Handler {
 		fmt.Println(id)
 		fmt.Println(err)
 
+		var UserID = "UserID"
+		next.ServeHTTP(writer, request.WithContext(context.WithValue(request.Context(), UserID, id)))
+
 		//TODO if user exist put them to request context
 	})
 }

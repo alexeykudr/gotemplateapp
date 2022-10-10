@@ -64,19 +64,6 @@ func main() {
 	services := service.NewService(repo)
 	handler := handler.NewHandler(services)
 
-	//mongoClient, err := mongo.NewMongoDbClient(mongo.Config{
-	//	User:     viper.GetString("MONGO_USER"),
-	//	Password: viper.GetString("MONGO_PASSWORD"),
-	//	Host:     viper.GetString("MONGO_HOST"),
-	//	Port:     viper.GetInt("MONGO_PORT"),
-	//})
-	//fmt.Println(mongoClient)
-
-	//m := mongo.NewAirbnbMongoInstance(mongoClient)
-	//m.FindByType("10038496")
-
-	//http.HandleFunc("/", BasicAuthHandler)
-	//http.HandleFunc("/orders", ReturnIdsHandler)
 	err = http.ListenAndServe(":8080", handler.InitRoutes())
 	if err != nil {
 		panic("Cant serve at this port")

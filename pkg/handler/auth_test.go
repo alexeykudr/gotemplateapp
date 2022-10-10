@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"backend"
 	service "backend/pkg/service"
 	mock_service "backend/pkg/service/mocks"
+	"backend/structs"
 	"bytes"
 	"context"
 	"errors"
@@ -15,25 +15,25 @@ import (
 )
 
 func TestHandler_signUp(t *testing.T) {
-	type mockBehavior func(s *mock_service.MockAuthorization, user backend.User)
+	type mockBehavior func(s *mock_service.MockAuthorization, user structs.User)
 
 	testTable := []struct {
 		name                 string
 		inputBody            string
-		inputUser            backend.User
+		inputUser            structs.User
 		mockBehavior         mockBehavior
 		expectedStatusCode   int
 		expectedResponseBody string
 	}{
 		{name: "Ok",
 			inputBody: `{"username": "username", "password": "qwerty", "email": "123@gmail.com", "isStuff": false}`,
-			inputUser: backend.User{
+			inputUser: structs.User{
 				Username: "username",
 				Password: "qwerty",
 				Email:    "123@gmail.com",
 				IsStuff:  false,
 			},
-			mockBehavior: func(r *mock_service.MockAuthorization, user backend.User) {
+			mockBehavior: func(r *mock_service.MockAuthorization, user structs.User) {
 				r.EXPECT().CreateUser(context.Background(), user).Return(1, nil).AnyTimes()
 			},
 			expectedStatusCode:   201,
@@ -41,12 +41,12 @@ func TestHandler_signUp(t *testing.T) {
 		},
 		{name: "OK",
 			inputBody: `{"username": "username", "password": "qwerty", "email": "123@gmail.com"}`,
-			inputUser: backend.User{
+			inputUser: structs.User{
 				Username: "username",
 				Password: "qwerty",
 				Email:    "123@gmail.com",
 			},
-			mockBehavior: func(r *mock_service.MockAuthorization, user backend.User) {
+			mockBehavior: func(r *mock_service.MockAuthorization, user structs.User) {
 				r.EXPECT().CreateUser(context.Background(), user).Return(2, nil).AnyTimes()
 			},
 			expectedStatusCode:   201,
@@ -54,11 +54,11 @@ func TestHandler_signUp(t *testing.T) {
 		},
 		{name: "shor username",
 			inputBody: `{"username": "q", "password": "qwerty"}`,
-			inputUser: backend.User{
+			inputUser: structs.User{
 				Username: "q",
 				Password: "qwerty",
 			},
-			mockBehavior: func(r *mock_service.MockAuthorization, user backend.User) {
+			mockBehavior: func(r *mock_service.MockAuthorization, user structs.User) {
 				r.EXPECT().CreateUser(context.Background(), user).Return(0, errors.New(`{"message":"Something went wrong"}`)).AnyTimes()
 			},
 			expectedStatusCode:   400,
@@ -66,11 +66,11 @@ func TestHandler_signUp(t *testing.T) {
 		},
 		{name: "without email",
 			inputBody: `{"username":"user123", "password":"abc123456789"}`,
-			inputUser: backend.User{
+			inputUser: structs.User{
 				Username: "user123",
 				Password: "abc123456789",
 			},
-			mockBehavior: func(r *mock_service.MockAuthorization, user backend.User) {
+			mockBehavior: func(r *mock_service.MockAuthorization, user structs.User) {
 				r.EXPECT().CreateUser(context.Background(), user).Return(0, errors.New(`{"message":"Something went wrong"}`)).AnyTimes()
 			},
 			expectedStatusCode:   400,

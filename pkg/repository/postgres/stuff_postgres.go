@@ -1,7 +1,7 @@
 package postgres
 
 import (
-	"backend"
+	"backend/structs"
 	"context"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -16,8 +16,8 @@ func NewStuffPostgres(db *pgxpool.Pool) *StuffPostgres {
 	return &StuffPostgres{Db: db}
 }
 
-func (i *StuffPostgres) GetAllUsers(ctx context.Context) ([]backend.User, error) {
-	var users []backend.User
+func (i *StuffPostgres) GetAllUsers(ctx context.Context) ([]structs.User, error) {
+	var users []structs.User
 
 	rows, err := i.Db.Query(ctx, "SELECT id, username, password_hash, email, stuff FROM users;")
 
@@ -32,7 +32,7 @@ func (i *StuffPostgres) GetAllUsers(ctx context.Context) ([]backend.User, error)
 	defer rows.Close()
 
 	for rows.Next() {
-		user := backend.User{}
+		user := structs.User{}
 		err := rows.Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.IsStuff)
 		if err != nil {
 			log.Error("Error with scan in GetAllUsers" + err.Error())

@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"backend"
+	"backend/structs"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -24,7 +24,7 @@ func (s *signInInput) Validate() error {
 func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var user backend.User
+	var user structs.User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		NewErrorResponse(w, r, err, http.StatusBadRequest)
@@ -56,6 +56,7 @@ func (h *Handler) SecretInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) Healthcheck(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "ok")
+	fmt.Println(r.Context().Value("UserID"))
 }
 
 func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {

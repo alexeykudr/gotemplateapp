@@ -1,8 +1,8 @@
 package postgres
 
 import (
-	"backend"
 	"backend/pkg/utils"
+	"backend/structs"
 	"context"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -18,8 +18,8 @@ func NewAuthPostgres(db *pgxpool.Pool) *Instance {
 	return &Instance{Db: db}
 }
 
-func (i *Instance) GetUser(ctx context.Context, username, password string) (backend.User, error) {
-	var user backend.User
+func (i *Instance) GetUser(ctx context.Context, username, password string) (structs.User, error) {
+	var user structs.User
 
 	row := i.Db.QueryRow(ctx, "SELECT id, username, email, stuff FROM users WHERE username=$1 AND password_hash=$2;",
 		username, password)
@@ -33,7 +33,7 @@ func (i *Instance) GetUser(ctx context.Context, username, password string) (back
 	return user, nil
 }
 
-func (i *Instance) AddUser(ctx context.Context, user backend.User) (int, error) {
+func (i *Instance) AddUser(ctx context.Context, user structs.User) (int, error) {
 	var id int
 	err := i.Db.QueryRow(ctx, "INSERT INTO users (created_at, username, password_hash, email, stuff) VALUES ($1, $2, $3, $4, $5) RETURNING ID",
 		time.Now(), user.Username, user.Password, user.Email, user.IsStuff).Scan(&id)
