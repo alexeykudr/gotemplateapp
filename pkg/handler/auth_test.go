@@ -52,7 +52,7 @@ func TestHandler_signUp(t *testing.T) {
 			expectedStatusCode:   201,
 			expectedResponseBody: `{"id":2}`,
 		},
-		{name: "shor username",
+		{name: "short username",
 			inputBody: `{"username": "q", "password": "qwerty"}`,
 			inputUser: structs.User{
 				Username: "q",

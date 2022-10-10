@@ -19,7 +19,8 @@ const signingKey = "kjqwhekzhjk123123bjz"
 
 type tokenClaims struct {
 	jwt.StandardClaims
-	UserId int `json:"user_id"`
+	UserId  int  `json:"user_id"`
+	IsStuff bool `json:"is_stuff"`
 }
 
 func NewAuthService(repo *postgres.Repository) *AuthService {
@@ -46,7 +47,7 @@ func (s *AuthService) GenerateToken(username, password string) (string, error) {
 			ExpiresAt: time.Now().Add(tokenTTL).Unix(),
 			IssuedAt:  time.Now().Unix(),
 		},
-		user.ID,
+		user.ID, user.IsStuff,
 	})
 
 	return token.SignedString([]byte(signingKey))

@@ -56,7 +56,7 @@ func (h *Handler) SecretInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) Healthcheck(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "ok")
-	fmt.Println(r.Context().Value("UserID"))
+	//fmt.Println(r.Context().Value("UserID"))
 }
 
 func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {

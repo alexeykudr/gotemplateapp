@@ -4,14 +4,13 @@ import (
 	"backend/pkg/handler"
 	"backend/pkg/repository/postgres"
 	"backend/pkg/service"
-	"fmt"
 	_ "github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"net/http"
 )
 
-func NewConfig() error {
+func newConfig() error {
 	viper.SetConfigFile(".env")
 	viper.AutomaticEnv()
 	err := viper.ReadInConfig()
@@ -21,24 +20,10 @@ func NewConfig() error {
 	return nil
 }
 
-func BasicAuthHandler(w http.ResponseWriter, r *http.Request) {
-	a := "qwe"
-	b := "123"
-	username, password, ok := r.BasicAuth()
-	if ok {
-		if username == a && password == b {
-			fmt.Fprint(w, "ok!")
-		} else {
-			w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		}
-	}
-}
-
 func main() {
 	log.SetFormatter(&log.JSONFormatter{})
 
-	err := NewConfig()
+	err := newConfig()
 	if err != nil {
 		log.Panic(err)
 		panic("Error with config!")

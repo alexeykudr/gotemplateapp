@@ -2,7 +2,7 @@ package handler
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"github.com/google/uuid"
 	"net/http"
 	"strings"
@@ -34,16 +34,21 @@ func BasicAuthMiddleware(next http.Handler) http.Handler {
 
 func (h *Handler) JWTMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		tokenString := request.Header["Authorization"]
+		if len(tokenString) == 0 {
+			NewErrorResponse(writer, request, errors.New("Empty token"), 404)
+			//TODO BUG! IF TOKEN EMPTY SEE ONLY 404 status code, but not error response
+		} else {
+			token := strings.Split(request.Header["Authorization"][0], " ")
+			//fmt.Println(token[1])
+			id, _ := h.Service.ParseToken(token[1])
+			//fmt.Println(id)
+			//fmt.Println(err)
 
-		token := strings.Split(request.Header["Authorization"][0], " ")
-		fmt.Println(token[1])
-		id, err := h.Service.ParseToken(token[1])
-		fmt.Println(id)
-		fmt.Println(err)
+			var UserID = "UserID"
+			next.ServeHTTP(writer, request.WithContext(context.WithValue(request.Context(), UserID, id)))
 
-		var UserID = "UserID"
-		next.ServeHTTP(writer, request.WithContext(context.WithValue(request.Context(), UserID, id)))
-
-		//TODO if user exist put them to request context
+			//TODO if user exist put them to request context
+		}
 	})
 }
