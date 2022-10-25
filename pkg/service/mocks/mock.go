@@ -5,7 +5,7 @@
 package mock_service
 
 import (
-	backend "backend/structs"
+	domain "backend/domain"
 	context "context"
 	reflect "reflect"
 
@@ -36,7 +36,7 @@ func (m *MockAuthorization) EXPECT() *MockAuthorizationMockRecorder {
 }
 
 // CreateUser mocks base method.
-func (m *MockAuthorization) CreateUser(ctx context.Context, user backend.User) (int, error) {
+func (m *MockAuthorization) CreateUser(ctx context.Context, user domain.User) (int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateUser", ctx, user)
 	ret0, _ := ret[0].(int)
@@ -50,32 +50,17 @@ func (mr *MockAuthorizationMockRecorder) CreateUser(ctx, user interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockAuthorization)(nil).CreateUser), ctx, user)
 }
 
-// GenerateToken mocks base method.
-func (m *MockAuthorization) GenerateToken(username, password string) (string, error) {
+// Login mocks base method.
+func (m *MockAuthorization) Login(email, password string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GenerateToken", username, password)
+	ret := m.ctrl.Call(m, "Login", email, password)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GenerateToken indicates an expected call of GenerateToken.
-func (mr *MockAuthorizationMockRecorder) GenerateToken(username, password interface{}) *gomock.Call {
+// Login indicates an expected call of Login.
+func (mr *MockAuthorizationMockRecorder) Login(email, password interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateToken", reflect.TypeOf((*MockAuthorization)(nil).GenerateToken), username, password)
-}
-
-// ParseToken mocks base method.
-func (m *MockAuthorization) ParseToken(accessToken string) (int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ParseToken", accessToken)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ParseToken indicates an expected call of ParseToken.
-func (mr *MockAuthorizationMockRecorder) ParseToken(accessToken interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ParseToken", reflect.TypeOf((*MockAuthorization)(nil).ParseToken), accessToken)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockAuthorization)(nil).Login), email, password)
 }

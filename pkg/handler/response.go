@@ -7,7 +7,19 @@ import (
 
 // NewErrorResponse Send error and status as json response
 func NewErrorResponse(w http.ResponseWriter, r *http.Request, err error, status int) {
-	res, _ := json.Marshal(err)
+	w.Header().Set("Content-Type", "application/json")
+	resp := make(map[string]string)
+	resp["Error"] = err.Error()
+	jsonResp, _ := json.Marshal(resp)
 	w.WriteHeader(status)
-	w.Write(res)
+	w.Write(jsonResp)
+}
+
+func NewOkResponse(w http.ResponseWriter, r *http.Request, data interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	resp := make(map[string]interface{})
+	resp["Ok"] = data
+	jsonResp, _ := json.Marshal(resp)
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonResp)
 }

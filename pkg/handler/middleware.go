@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"backend/pkg/utils"
 	"context"
 	"errors"
 	"github.com/google/uuid"
@@ -36,14 +37,16 @@ func (h *Handler) JWTMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		tokenString := request.Header["Authorization"]
 		if len(tokenString) == 0 {
-			NewErrorResponse(writer, request, errors.New("Empty token"), 404)
-			//TODO BUG! IF TOKEN EMPTY SEE ONLY 404 status code, but not error response
+			NewErrorResponse(writer, request, errors.New("empty token"), 404)
+			return
 		} else {
 			token := strings.Split(request.Header["Authorization"][0], " ")
-			//fmt.Println(token[1])
-			id, _ := h.Service.ParseToken(token[1])
-			//fmt.Println(id)
-			//fmt.Println(err)
+			id, err := utils.ParseToken(token[1])
+
+			if err != nil {
+				NewErrorResponse(writer, request, err, 400)
+				return
+			}
 
 			var UserID = "UserID"
 			next.ServeHTTP(writer, request.WithContext(context.WithValue(request.Context(), UserID, id)))

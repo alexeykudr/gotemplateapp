@@ -1,17 +1,16 @@
 package service
 
 import (
+	"backend/domain"
 	"backend/pkg/repository/postgres"
 	_ "backend/pkg/repository/postgres"
-	"backend/structs"
 	"context"
 )
 
 //go:generate mockgen -source=service.go -destination=mocks/mock.go
 type Authorization interface {
-	CreateUser(ctx context.Context, user structs.User) (int, error)
-	GenerateToken(username, password string) (string, error)
-	ParseToken(accessToken string) (int, error)
+	CreateUser(ctx context.Context, user domain.User) (int, error)
+	Login(email, password string) (string, error)
 }
 type Service struct {
 	Authorization

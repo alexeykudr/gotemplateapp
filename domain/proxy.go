@@ -1,4 +1,4 @@
-package structs
+package domain
 
 //Proxy model of proxy instance in DB
 type Proxy struct {

@@ -25,10 +25,6 @@ func (h *Handler) InitRoutes() *chi.Mux {
 	r.Post("/sign-up", h.SignUp)
 	r.Get("/sign-in", h.signIn)
 	r.With(h.JWTMiddleware).Get("/", h.Healthcheck)
-	//r.With(BasicAuthMiddleware).Get("/user", h.getUsersList)
-	//r.Get("/user/{id:[0-9]+}", h.getUserById)
-	//r.Delete("/user/{id:[0-9]+}", h.deleteUser)
-	////r.HandleFunc("/articles", ArticlesHandler)
 	http.Handle("/", r)
 	return r
 }

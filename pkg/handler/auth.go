@@ -1,35 +1,27 @@
 package handler
 
 import (
-	"backend/structs"
+	"backend/domain"
 	"context"
 	"encoding/json"
-	"fmt"
-	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"net/http"
 )
 
 type signInInput struct {
-	Username string `json:"username" binding:"required"`
+	Email    string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`
-}
-
-func (s *signInInput) Validate() error {
-	return validation.ValidateStruct(&s,
-		validation.Field(&s.Username, validation.Required, validation.Length(5, 50)),
-		validation.Field(&s.Password, validation.Required, validation.Length(5, 50)),
-	)
 }
 
 func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	var user domain.User
 
-	var user structs.User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		NewErrorResponse(w, r, err, http.StatusBadRequest)
 		return
 	}
+
 	err = user.Validate()
 	if err != nil {
 		NewErrorResponse(w, r, err, http.StatusBadRequest)
@@ -37,11 +29,11 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id, err := h.Service.CreateUser(context.Background(), user)
-
 	if err != nil {
 		NewErrorResponse(w, r, err, http.StatusInternalServerError)
 		return
 	}
+
 	resp := make(map[string]int)
 	resp["id"] = id
 	jsonResp, _ := json.Marshal(resp)
@@ -50,32 +42,30 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonResp)
 }
 
-func (h *Handler) SecretInfoHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "secret info")
-}
-
 func (h *Handler) Healthcheck(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "ok")
-	//fmt.Println(r.Context().Value("UserID"))
+	v := r.Context().Value("UserID")
+	r_id := r.Context().Value("RequestIDKey")
+	resp := make(map[string]string)
+	resp[v.(string)] = r_id.(string)
+	jsonResp, _ := json.Marshal(resp)
+	NewOkResponse(w, r, jsonResp)
+
 }
 
 func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
-	var input signInInput
-	err := json.NewDecoder(r.Body).Decode(&input)
-	if err != nil {
-		NewErrorResponse(w, r, err, http.StatusBadRequest)
-		return
-	}
-
-	token, err := h.Service.GenerateToken(input.Username, input.Password)
+	var inputUser signInInput
+	err := json.NewDecoder(r.Body).Decode(&inputUser)
 	if err != nil {
 		NewErrorResponse(w, r, err, http.StatusInternalServerError)
+		return
+	}
+	token, err := h.Service.Login(inputUser.Email, inputUser.Password)
+	if err != nil {
+		NewErrorResponse(w, r, err, http.StatusBadRequest)
 		return
 	}
 	resp := make(map[string]string)
 	resp["token"] = token
 	jsonResp, _ := json.Marshal(resp)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	w.Write(jsonResp)
+	NewOkResponse(w, r, jsonResp)
 }
